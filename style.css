@@ -1,1 +1,62 @@
+```javascript
+const ramos = [
+  { codigo: 'QYF 121', nombre: 'QUÍMICA ORGÁNICA I', semestre: '1-2', prerrequisitos: [] },
+  { codigo: 'QYF 211', nombre: 'QUÍMICA ORGÁNICA II', semestre: '2-1', prerrequisitos: ['QYF 121'] },
+  { codigo: 'QYF 226', nombre: 'BIOQUÍMICA II', semestre: '3-1', prerrequisitos: ['QYF 211'] },
+  { codigo: 'QYF 411', nombre: 'FARMACOLOGÍA I', semestre: '4-1', prerrequisitos: ['QYF 226'] },
+  { codigo: 'QYF 511', nombre: 'FARMACIA CLÍNICA I', semestre: '5-2', prerrequisitos: ['QYF 411'] }
+];
 
+const estados = JSON.parse(localStorage.getItem('estadoRamos')) || {};
+
+function guardarEstado() {
+  localStorage.setItem('estadoRamos', JSON.stringify(estados));
+}
+
+function crearMalla() {
+  const malla = document.getElementById('malla');
+  const semestres = {};
+
+  ramos.forEach(r => {
+    if (!semestres[r.semestre]) {
+      semestres[r.semestre] = [];
+    }
+    semestres[r.semestre].push(r);
+  });
+
+  Object.entries(semestres).forEach(([sem, ramosSem]) => {
+    const div = document.createElement('div');
+    div.className = 'semestre';
+    div.innerHTML = `<h3>${sem}</h3>`;
+
+    ramosSem.forEach(ramo => {
+      const estado = estados[ramo.codigo] || 'pendiente';
+      const divRamo = document.createElement('div');
+      divRamo.className = 'ramo';
+      divRamo.textContent = `${ramo.codigo} - ${ramo.nombre}`;
+
+      const cumpleRequisitos = ramo.prerrequisitos.every(pr => estados[pr] === 'aprobado');
+
+      if (estado === 'aprobado') {
+        divRamo.classList.add('aprobado');
+      } else if (!cumpleRequisitos) {
+        divRamo.classList.add('bloqueado');
+      }
+
+      divRamo.addEventListener('click', () => {
+        if (divRamo.classList.contains('bloqueado')) return;
+        const nuevoEstado = estados[ramo.codigo] === 'aprobado' ? 'pendiente' : 'aprobado';
+        estados[ramo.codigo] = nuevoEstado;
+        guardarEstado();
+        location.reload();
+      });
+
+      div.appendChild(divRamo);
+    });
+
+    malla.appendChild(div);
+  });
+}
+
+crearMalla();
+```
